@@ -1,0 +1,59 @@
+package com.example.demo.domain.model;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * UserRepository インターフェイス
+ * ----------------------------------
+ * ユーザー情報に関するデータ操作を抽象化したリポジトリのインターフェイス。
+ * 実装はインフラ層で行い、ここでは「どんな操作が可能か」を定義する。
+ * 例：IDでの検索、ユーザー名での検索、全件取得など。
+ */
+public interface UserRepository {
+	/**
+     * 指定されたIDに一致するユーザーを検索する。
+     *
+     * @param id ユーザーID
+     * @return 該当ユーザーが存在すればOptional<User>、存在しなければ空
+     */
+    Optional<User> findById(String id);
+    
+    /**
+     * 指定されたユーザー名に一致するユーザーを検索する。
+     *
+     * @param username ユーザー名
+     * @return 該当ユーザーが存在すればOptional<User>、存在しなければ空
+     */
+    Optional<User> findByUsername(String username);
+    
+    /**
+     * 登録されているすべてのユーザーを取得する。
+     *
+     * @return 全ユーザーのリスト
+     */
+    List<User> findAll();
+    
+    /**
+     * 表示名に特定のキーワードが含まれるユーザーを検索する。
+     *
+     * @param keyword 表示名に含まれる検索キーワード
+     * @return 一致したユーザーのリスト
+     */
+    List<User> searchByDisplayName(String keyword);
+   
+    /**
+     * ユーザー情報を保存・更新する。
+     * 新規作成または既存ユーザーの上書き保存に使用。
+     *
+     * @param user 保存したいユーザーオブジェクト
+     * @return 保存後のユーザー（IDなどが自動設定されて返ることが多い）
+     */
+    User save(User user);
+    /**
+     * 指定されたIDのユーザーを削除する。
+     *
+     * @param id 削除したいユーザーのID
+     */
+    void deleteById(String id);
+}

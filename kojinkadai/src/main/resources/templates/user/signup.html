@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}">
+<head>
+    <title>新規登録</title>
+    <meta name="description" content="ユーザー登録">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <h2>新規ユーザー登録</h2>
+    
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
+    </div>
+    
+    <form method="POST" th:action="@{/user/signup}" th:object="${userForm}">
+        <div class="form-group">
+            <label for="username">ユーザー名</label>
+            <input id="username" placeholder="ユーザー名（英数字とアンダースコア）" th:field="*{username}" class="form-control">
+            <span class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username Error</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">メールアドレス</label>
+            <input id="email" type="email" placeholder="example@example.com" th:field="*{email}" class="form-control">
+            <span class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email Error</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="displayName">表示名</label>
+            <input id="displayName" placeholder="表示名" th:field="*{displayName}" class="form-control">
+            <span class="error-message" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">Display Name Error</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="bio">自己紹介</label>
+            <textarea id="bio" placeholder="自己紹介（任意）" th:field="*{bio}" class="form-control" rows="3"></textarea>
+            <span class="error-message" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}">Bio Error</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">パスワード</label>
+            <input id="password" placeholder="パスワード（6文字以上）" th:field="*{password}" type="password" class="form-control">
+            <span class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password Error</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="passwordConfirm">パスワード確認</label>
+            <input id="passwordConfirm" placeholder="パスワード確認" th:field="*{passwordConfirm}" type="password" class="form-control">
+            <span class="error-message" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">Password Confirm Error</span>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">ユーザー登録</button>
+        <a th:href="@{/user}" class="btn btn-secondary">ログインページに戻る</a>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- 
+  プロフィール編集画面
+  ログイン中のユーザーが、表示名と自己紹介を変更できるフォーム画面。
+-->
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}"><!-- 共通レイアウト(layout.htmlなど)を利用する指定 -->
+<head>
+    <title>プロフィール編集</title>
+    <meta name="description" content="プロフィール編集">
+</head>
+<body>
+<!-- 共通レイアウト内の layoutContent 部分にこの内容を挿入 -->
+<div layout:fragment="layoutContent">
+    <h2>プロフィール編集</h2>
+    
+    <!-- 
+      エラーメッセージ表示（サーバー側で例外などが発生した場合）
+      例：プロフィールの更新に失敗したときなど 
+    -->
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
+    </div>
+    
+    <!-- 
+      プロフィール編集フォーム
+      th:object でバインド対象のオブジェクトを指定（Controllerから渡される profileForm）
+      入力内容は ProfileForm クラスのフィールドと紐づけされる。
+    -->
+    <form method="POST" th:action="@{/profile/edit}" th:object="${profileForm}">
+		<!-- 表示名入力欄 -->
+        <div class="form-group">
+            <label for="displayName">表示名</label>
+            <!-- 
+              th:field="*{displayName}" 
+              → profileForm.displayName に対応。name属性とvalue属性を自動生成。
+            -->
+            <input id="displayName" th:field="*{displayName}" class="form-control" placeholder="表示名">
+            <!-- バリデーションエラーがある場合のエラーメッセージ表示 -->
+            <span class="error-message" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}">Display Name Error</span>
+        </div>
+        
+        <!-- 自己紹介入力欄 -->
+        <div class="form-group">
+            <label for="bio">自己紹介</label>
+            <!-- 
+              th:field="*{bio}" 
+              → profileForm.bio に対応。
+            -->
+            <textarea id="bio" th:field="*{bio}" class="form-control" rows="4" placeholder="自己紹介"></textarea>
+            <!-- バリデーションエラーがある場合のエラーメッセージ表示 -->
+            <span class="error-message" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}">Bio Error</span>
+        </div>
+        
+        <!-- ボタン群：更新 or キャンセル -->
+        <div class="form-actions">
+			<!-- フォームを送信してプロフィール更新 -->
+            <button type="submit" class="btn btn-primary">更新</button>
+            <!-- 編集をキャンセルしてプロフィール画面に戻る -->
+            <a th:href="@{/profile}" class="btn btn-secondary">キャンセル</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

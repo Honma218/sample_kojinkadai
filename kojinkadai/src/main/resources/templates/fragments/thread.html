@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="tableData(contents)" class="thread">
+    <div th:each="content : ${contents}" class="user-contents">
+        <div class="row-item">
+            <span th:text="${content.id}" class="number-id"></span>
+            <span th:text="${content.userId}" class="name"></span>
+            <span th:text="${content.dateTime}" class="date"></span>
+        </div>
+        <div th:text="${content.content}" class="text-area">
+        </div>
+    </div>
+</div>
+</html>

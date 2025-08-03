@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!-- 
+  プロフィール詳細画面 
+  自分または他ユーザーのプロフィール情報・投稿一覧を表示。
+  他人のプロフィールの場合はフォローボタンが表示される。
+-->
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}"><!-- 共通レイアウトファイルを使用 -->
+<head>
+    <title>プロフィール</title>
+    <meta name="description" content="ユーザープロフィール">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <div class="profile-header">
+        <div class="profile-avatar-section">
+            <!-- プロフィールアバター -->
+            <div th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}">
+                <img th:src="${user.avatarUrl}" th:alt="${user.displayName.value} + 'のアバター'" class="profile-avatar">
+            </div>
+            <div th:unless="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}" 
+                 class="profile-avatar default" 
+                 th:text="${#strings.substring(user.displayName.value, 0, 1)}">
+                A
+            </div>
+        </div>
+        <div class="profile-info">
+			<!-- ユーザーの表示名（th:text：サーバーの値をHTMLに表示） -->
+            <h2 th:text="${user.displayName.value}">表示名</h2>
+            <!-- ユーザー名（@付き） -->
+            <p class="username">@<span th:text="${user.username}">username</span></p>
+            <!-- 自己紹介文（th:text：エスケープして表示） -->
+            <p class="bio" th:text="${user.bio}">自己紹介</p>
+            
+            <div class="profile-stats">
+                <a th:href="@{/follow/following}" th:if="${isOwnProfile}">
+                    <strong th:text="${followingCount}">0</strong> フォロー中
+                </a>
+                <span th:unless="${isOwnProfile}">
+                    <strong th:text="${followingCount}">0</strong> フォロー中
+                </span>
+                
+                <a th:href="@{/follow/followers}" th:if="${isOwnProfile}">
+                    <strong th:text="${followerCount}">0</strong> フォロワー
+                </a>
+                <span th:unless="${isOwnProfile}">
+                    <strong th:text="${followerCount}">0</strong> フォロワー
+                </span>
+                
+                <span><strong th:text="${#lists.size(posts)}">0</strong> 投稿</span>
+            </div>
+            
+            <!-- 
+				自分のプロフィールかどうかで表示を分岐。
+				th:if → 条件がtrueのとき表示される。
+				自分のプロフィールの場合は編集ボタンを表示
+			-->
+            <div class="profile-actions" th:if="${isOwnProfile}">
+                <a th:href="@{/profile/edit}" class="btn btn-primary">プロフィール編集</a>
+            </div>
+
+            <!-- 
+				他人のプロフィールの場合：フォローボタン表示。
+				th:unless は th:if の逆（falseのときに表示）
+			-->
+            <div class="profile-actions" th:unless="${isOwnProfile}">
+                <button class="btn btn-primary follow-btn" 
+                        th:data-user-id="${user.id.value}">フォロー</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="profile-posts">
+        <h3>投稿一覧</h3>
+        <div th:if="${#lists.isEmpty(posts)}" class="no-posts">
+            <p>まだ投稿がありません</p>
+        </div>
+        <!-- 投稿一覧のループ表示 -->
+        <!-- th:each は Java の for-each と同じようにリストから1件ずつ取り出す -->
+        <div th:each="post : ${posts}" class="post-item">
+            <div class="post-content">
+				<!-- 投稿内容の本文を表示 -->
+                <p th:text="${post.content.value}">投稿内容</p>
+                <div class="post-meta">
+					<!-- 投稿日時をフォーマットして表示 -->
+                    <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">投稿日時</span>
+                    <!-- 自分の投稿のみ編集・削除ボタン表示 -->
+                    <div th:if="${isOwnProfile}" class="post-actions">
+                        <a th:href="@{/board/edit/{id}(id=${post.id})}" class="btn btn-sm btn-secondary">編集</a>
+                        <a th:href="@{/board/delete/{id}(id=${post.id})}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('この投稿を削除しますか？')">削除</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<<<<<<< HEAD
+<!-- JavaScript処理 --> 
+=======
+>>>>>>> refs/remotes/origin/dev_kojin_kadai_honma
+<script layout:fragment="customScript">
+// フォローボタンのクリック処理
+document.querySelectorAll('.follow-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const userId = this.dataset.userId;
+        const isFollowing = this.textContent === 'フォロー解除';
+        
+        // 状態に応じてフォロー or フォロー解除APIにリクエスト
+        const url = isFollowing ? `/follow/unfollow/${userId}` : `/follow/${userId}`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.text()) // サーバーからのメッセージを取得
+        .then(data => {
+			// ボタン表示を更新
+            if (isFollowing) {
+                this.textContent = 'フォロー';
+                this.className = 'btn btn-primary follow-btn';
+            } else {
+                this.textContent = 'フォロー解除';
+                this.className = 'btn btn-secondary follow-btn';
+            }
+            alert(data); // 通知メッセージを表示
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('エラーが発生しました');
+        });
+    });
+});
+
+// ページ読み込み時にフォロー状態を確認
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.querySelector('.follow-btn');
+    if (followBtn) {
+        const userId = followBtn.dataset.userId;
+        fetch(`/follow/status/${userId}`)
+        .then(response => response.json())
+        .then(isFollowing => {
+            if (isFollowing) {
+                followBtn.textContent = 'フォロー解除';
+                followBtn.className = 'btn btn-secondary follow-btn';
+            }
+        });
+    }
+});
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+graph TD
+    Login[ログイン画面] --> B[ユーザー登録画面]
+    B --> C[ユーザー登録完了画面]
+    C --> Top[トップ画面<br/>投稿一覧・ログアウト]
+    Login --> Top
+    Top --> E[ログアウト]
+    E --> Login
+    
+    %% 投稿関連
+    Top --> NewPost[新規投稿画面]
+    NewPost --> Top
+    Top --> EditPost[投稿編集画面]
+    EditPost --> Top
+    Top --> |投稿削除| Top
+    
+    %% プロフィール関連
+    Top --> MyProfile[プロフィール画面<br/>ログインユーザー]
+    MyProfile --> EditProfile[プロフィール編集画面]
+    EditProfile --> MyProfile
+    MyProfile --> Top
+    
+    %% フォロー・フォロワー関連
+    MyProfile --> FollowList[フォロー一覧]
+    MyProfile --> FollowerList[フォロワー一覧]
+    FollowList --> FollowUserProfile[プロフィール画面<br/>フォローユーザー]
+    FollowerList --> FollowerUserProfile[プロフィール画面<br/>フォロワーユーザー]
+    FollowList --> MyProfile
+    FollowerList --> MyProfile
+    FollowUserProfile --> FollowList
+    FollowerUserProfile --> FollowerList
+    
+    %% 検索関連
+    Top --> Search[ユーザー検索画面]
+    Search --> SearchResult[ユーザー検索結果一覧画面]
+    SearchResult --> SearchUserProfile[プロフィール画面<br/>全ユーザー]
+    Search --> Top
+    SearchResult --> Search
+    SearchUserProfile --> SearchResult
+    
+    %% フォロー・フォロワーリスト
+    Top --> FollowListMain[フォローリスト画面]
+    Top --> FollowerListMain[フォロワーリスト画面]
+    FollowListMain --> Top
+    FollowerListMain --> Top

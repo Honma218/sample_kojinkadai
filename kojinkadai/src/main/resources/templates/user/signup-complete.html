@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}">
+<head>
+    <title>ユーザー登録完了</title>
+    <meta name="description" content="ユーザー登録完了">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="card-title text-success">ユーザー登録完了</h2>
+                        <p class="card-text">
+                            ユーザー登録が正常に完了しました。<br>
+                            自動的にログインしています。
+                        </p>
+                        <p class="text-muted">
+                            数秒後に自動的にトップ画面に移動します。
+                        </p>
+                        <a th:href="@{/board}" class="btn btn-primary">トップ画面へ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 3秒後に自動的にトップ画面に移動
+        setTimeout(function() {
+            window.location.href = '/board';
+        }, 3000);
+    </script>
+</div>
+</body>
+</html>

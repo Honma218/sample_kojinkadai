@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}">
+<head>
+    <title>フォロー中</title>
+    <meta name="description" content="フォロー中のユーザー一覧">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <h2>フォロー中のユーザー</h2>
+    
+    <div th:if="${#lists.isEmpty(users)}" class="no-users">
+        <p>フォロー中のユーザーはいません</p>
+        <a th:href="@{/search}" class="btn btn-primary">ユーザーを探す</a>
+    </div>
+    
+    <div th:each="user : ${users}" class="user-item">
+        <div class="user-info">
+            <h4><a th:href="@{/profile/{id}(id=${user.id.value})}" th:text="${user.displayName.value}">表示名</a></h4>
+            <p class="username">@<span th:text="${user.username}">username</span></p>
+            <p class="bio" th:text="${user.bio}">自己紹介</p>
+        </div>
+        <div class="user-actions">
+            <button class="btn btn-danger unfollow-btn" 
+                    th:data-user-id="${user.id.value}">フォロー解除</button>
+        </div>
+    </div>
+    
+    <div class="navigation">
+        <a th:href="@{/profile}" class="btn btn-secondary">プロフィールに戻る</a>
+    </div>
+	<script layout:fragment="customScript">
+		document.querySelectorAll('.unfollow-btn').forEach(btn => {
+    	btn.addEventListener('click', function() {
+        	const userId = this.dataset.userId;
+        	if (confirm('このユーザーのフォローを解除しますか？')) {
+           	 fetch(`/follow/unfollow/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+           	 })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        }
+    });
+	});
+	</script>
+</div>
+</body>
+</html>

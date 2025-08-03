@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.infrastructure.datasource.UserMapper">
+
+    <resultMap id="userResultMap" type="com.example.demo.domain.model.User">
+        <constructor>
+            <idArg column="id" javaType="String"/>
+            <arg column="username" javaType="String"/>
+            <arg column="email" javaType="String"/>
+            <arg column="display_name" javaType="String"/>
+            <arg column="bio" javaType="String"/>
+            <arg column="avatar_url" javaType="String"/>
+            <arg column="created_at" javaType="java.time.LocalDateTime"/>
+            <arg column="updated_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findById" resultMap="userResultMap">
+        SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at 
+        FROM APP_USERS 
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByUsername" resultMap="userResultMap">
+        SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at 
+        FROM APP_USERS 
+        WHERE username = #{username}
+    </select>
+
+    <select id="findAll" resultMap="userResultMap">
+        SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at 
+        FROM APP_USERS 
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="searchByDisplayName" resultMap="userResultMap">
+        SELECT id, username, email, display_name, bio, avatar_url, created_at, updated_at 
+        FROM APP_USERS 
+        WHERE display_name LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY created_at DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id.value">
+        INSERT INTO APP_USERS (username, email, display_name, bio, avatar_url, created_at, updated_at)
+        VALUES (#{username}, #{email.value}, #{displayName.value}, #{bio}, #{avatarUrl}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE APP_USERS 
+        SET email = #{email.value}, display_name = #{displayName.value}, bio = #{bio}, 
+            avatar_url = #{avatarUrl}, updated_at = #{updatedAt}
+        WHERE id = #{id.value}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM APP_USERS WHERE id = #{id}
+    </delete>
+
+</mapper>

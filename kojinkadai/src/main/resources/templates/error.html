@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エラー - SNS</title>
+    <link href="/css/qiita-style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <a href="/" class="nav-brand">
+                <span id="logo">SNS</span>
+            </a>
+            <div class="nav-menu">
+                <a href="/user" class="nav-link">ログイン</a>
+                <a href="/user/signup" class="btn btn-primary">新規登録</a>
+            </div>
+        </div>
+    </header>
+    
+    <div id="content">
+        <div id="main-area">
+            <div class="error-container">
+                <h1 th:text="${statusCode}">エラーコード</h1>
+                <h2 th:text="${errorMessage}">エラーメッセージ</h2>
+                <p th:text="${errorDescription}">エラーの詳細説明</p>
+                
+                <div class="error-actions">
+                    <a href="/" class="btn btn-primary">ホームに戻る</a>
+                    <a href="/user" class="btn btn-secondary">ログインページ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 SNS. All rights reserved.</p>
+    </footer>
+    
+    <style>
+        .error-container {
+            text-align: center;
+            padding: 50px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .error-container h1 {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        
+        .error-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .error-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}">
+<head>
+    <title>掲示板</title>
+    <meta name="description" content="掲示板です">
+    <link th:href="@{/css/board.css}" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <div class="header-actions">
+        <div class="user-info">
+            <span>ようこそ、</span>
+            <a th:href="@{/profile}" th:text="${currentUser.displayName.value}">ユーザー名</a>
+        </div>
+        <div class="nav-links">
+            <a th:href="@{/profile}" class="btn btn-outline">マイプロフィール</a>
+            <a th:href="@{/search}" class="btn btn-outline">ユーザー検索</a>
+            <a th:href="@{/follow/following}" class="btn btn-outline">フォロー中</a>
+            <a th:href="@{/follow/followers}" class="btn btn-outline">フォロワー</a>
+        </div>
+    </div>
+
+    <!-- 新規投稿フォーム -->
+    <div class="post-form">
+        <h3>新しい投稿</h3>
+        <form method="POST" th:action="@{/board}" th:object="${contentForm}">
+            <div class="form-group">
+                <textarea placeholder="今何をしていますか？" rows="3" th:field="*{text}" class="form-control">
+                </textarea>
+                <span class="error-message" th:if="${#fields.hasErrors('text')}" th:errors="*{text}">Text Error</span>
+            </div>
+            <button type="submit" class="btn btn-primary">投稿</button>
+        </form>
+    </div>
+
+    <!-- タイムライン -->
+    <div class="timeline">
+        <h3>タイムライン</h3>
+        <div th:if="${#lists.isEmpty(timeline)}" class="no-posts">
+            <p>まだ投稿がありません。フォローするユーザーを見つけて投稿をチェックしましょう！</p>
+            <a th:href="@{/search}" class="btn btn-primary">ユーザーを探す</a>
+        </div>
+        
+        <div th:each="post : ${timeline}" class="post-item">
+            <div class="post-header">
+                <div class="post-user-content">
+                    <!-- 投稿者アバター -->
+                    <div th:if="${post.user.avatarUrl != null and !#strings.isEmpty(post.user.avatarUrl)}">
+                        <img th:src="${post.user.avatarUrl}" th:alt="${post.user.displayName.value} + 'のアバター'" class="post-avatar">
+                    </div>
+                    <div th:unless="${post.user.avatarUrl != null and !#strings.isEmpty(post.user.avatarUrl)}" 
+                         class="post-avatar default" 
+                         th:text="${#strings.substring(post.user.displayName.value, 0, 1)}">
+                        A
+                    </div>
+                    
+                    <div class="user-info">
+                        <a th:href="@{/profile/{id}(id=${post.user.id.value})}" class="user-link">
+                            <strong th:text="${post.user.displayName.value}">表示名</strong>
+                            <span class="username">@<span th:text="${post.user.username}">username</span></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="post-time">
+                    <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">投稿日時</span>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <p th:text="${post.content}">投稿内容</p>
+            </div>
+            
+            <div class="post-actions" th:if="${post.user.id.value == currentUser.id.value}">
+                <a th:href="@{/board/edit/{id}(id=${post.postId})}" class="btn btn-sm btn-secondary">編集</a>
+                <form method="POST" th:action="@{/board/delete/{id}(id=${post.postId})}" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-danger" 
+                            onclick="return confirm('この投稿を削除しますか？')">削除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

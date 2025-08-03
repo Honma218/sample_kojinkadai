@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.infrastructure.datasource.FollowMapper">
+
+    <resultMap id="followResultMap" type="com.example.demo.domain.model.Follow">
+        <id property="id" column="id"/>
+        <result property="followerId.value" column="follower_id"/>
+        <result property="followingId.value" column="following_id"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByFollowerIdAndFollowingId" resultMap="followResultMap">
+        SELECT id, follower_id, following_id, created_at 
+        FROM FOLLOWS 
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </select>
+
+    <select id="findByFollowerId" resultMap="followResultMap">
+        SELECT id, follower_id, following_id, created_at 
+        FROM FOLLOWS 
+        WHERE follower_id = #{followerId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByFollowingId" resultMap="followResultMap">
+        SELECT id, follower_id, following_id, created_at 
+        FROM FOLLOWS 
+        WHERE following_id = #{followingId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findFollowingIdsByFollowerId" resultType="java.lang.String">
+        SELECT following_id 
+        FROM FOLLOWS 
+        WHERE follower_id = #{followerId}
+    </select>
+
+    <select id="countByFollowerId" resultType="int">
+        SELECT COUNT(*) 
+        FROM FOLLOWS 
+        WHERE follower_id = #{followerId}
+    </select>
+
+    <select id="countByFollowingId" resultType="int">
+        SELECT COUNT(*) 
+        FROM FOLLOWS 
+        WHERE following_id = #{followingId}
+    </select>
+
+    <select id="existsByFollowerIdAndFollowingId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM FOLLOWS 
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO FOLLOWS (follower_id, following_id, created_at)
+        VALUES (#{followerId.value}, #{followingId.value}, #{createdAt})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM FOLLOWS 
+        WHERE follower_id = #{followerId} AND following_id = #{followingId}
+    </delete>
+
+</mapper>

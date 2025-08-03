@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="common-meta">
+    <title>レイアウト</title>
+
+    <link th:href="@{/css/qiita-style.css}" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <a th:href="@{/}" class="nav-brand">
+                <span id="logo">SNS</span>
+            </a>
+            <div class="nav-menu">
+                <!-- 開発中は認証なしでナビゲーション表示 -->
+                <a th:href="@{/board}" class="nav-link">ホーム</a>
+                <a th:href="@{/profile}" class="nav-link">プロフィール</a>
+                <a th:href="@{/search}" class="nav-link">ユーザー検索</a>
+                <a th:href="@{/user}" class="nav-link">ログイン</a>
+                <a th:href="@{/user/signup}" class="btn btn-primary">新規登録</a>
+            </div>
+        </div>
+    </header>
+    <div id="content">
+        <main id="main-area" layout:fragment="layoutContent">
+            <p>Default content</p>
+        </main>
+        <div id="side-area">
+            サイドバー
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 SNS. All rights reserved.</p>
+    </footer>
+</body>
+</html>

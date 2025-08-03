@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        xmlns:th="http://www.w3.org/1999/xhtml"
+        layout:decorate="~{layout}">
+<head>
+    <title>ユーザー検索</title>
+    <meta name="description" content="ユーザー検索">
+</head>
+<body>
+<div layout:fragment="layoutContent">
+    <h2>ユーザー検索</h2>
+    
+    <form method="GET" th:action="@{/search}" class="search-form">
+        <div class="form-group">
+            <input type="text" name="keyword" th:value="${keyword}" 
+                   placeholder="ユーザーを検索..." class="form-control">
+            <button type="submit" class="btn btn-primary">検索</button>
+        </div>
+    </form>
+    
+    <div th:if="${searchPerformed}" class="search-result-info">
+        <h3>"<span th:text="${keyword}">検索キーワード</span>"の検索結果</h3>
+    </div>
+    
+    <div th:if="${searchPerformed and #lists.isEmpty(users)}" class="no-results">
+        <p>"<span th:text="${keyword}">検索キーワード</span>"の検索結果は0件です。</p>
+    </div>
+    
+    <div th:if="${not searchPerformed}" class="all-users-info">
+        <h3>全ユーザー一覧</h3>
+    </div>
+    
+    <div class="users-list">
+        <div th:each="user : ${users}" class="user-item">
+            <div class="user-content">
+                <!-- ユーザーアバター -->
+                <div th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}">
+                    <img th:src="${user.avatarUrl}" th:alt="${user.displayName.value} + 'のアバター'" class="user-avatar">
+                </div>
+                <div th:unless="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}" 
+                     class="user-avatar default" 
+                     th:text="${#strings.substring(user.displayName.value, 0, 1)}">
+                    A
+                </div>
+                
+                <div class="user-info">
+                    <h4><a th:href="@{/profile/{id}(id=${user.id.value})}" th:text="${user.displayName.value}">表示名</a></h4>
+                    <p class="username">@<span th:text="${user.username}">username</span></p>
+                    <p class="bio" th:text="${user.bio ?: '自己紹介なし'}">自己紹介</p>
+                </div>
+            </div>
+            <div class="user-actions" layout:fragment="customScript">
+                <button class="btn btn-primary follow-btn" 
+                        th:data-user-id="${user.id.value}"
+                        th:data-is-following="${followUseCase.isFollowing(currentUser.id.value, user.id.value)}">
+                    <span th:if="${followUseCase.isFollowing(currentUser.id.value, user.id.value)}">フォロー解除</span>
+                    <span th:unless="${followUseCase.isFollowing(currentUser.id.value, user.id.value)}">フォロー</span>
+                </button>
+            </div>
+        </div>
+    </div>
+<script>
+document.querySelectorAll('.follow-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const userId = this.dataset.userId;
+        const isFollowing = this.dataset.isFollowing === 'true';
+        
+        const url = isFollowing ? `/follow/unfollow/${userId}` : `/follow/${userId}`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (isFollowing) {
+                this.innerHTML = 'フォロー';
+                this.className = 'btn btn-primary follow-btn';
+                this.dataset.isFollowing = 'false';
+            } else {
+                this.innerHTML = 'フォロー解除';
+                this.className = 'btn btn-secondary follow-btn';
+                this.dataset.isFollowing = 'true';
+            }
+            // 成功メッセージを控えめに表示
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('エラーが発生しました');
+        });
+    });
+});
+
+// 初期状態でボタンのスタイルを設定
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.follow-btn').forEach(btn => {
+        const isFollowing = btn.dataset.isFollowing === 'true';
+        if (isFollowing) {
+            btn.className = 'btn btn-secondary follow-btn';
+        }
+    });
+});
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,321 @@
+package com.example.demo;
+
+import java.util.List;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.example.demo.application.form.ProfileForm;
+import com.example.demo.application.usecase.UserProfileUseCase;
+import com.example.demo.domain.model.Post;
+import com.example.demo.domain.model.User;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * プロフィール管理コントローラー
+ * 
+ * ユーザーのプロフィール表示、編集機能を提供します。
+ * 認証済みユーザーのみアクセス可能で、安全なエラーハンドリングを実装しています。
+ * 
+ * @author Generated with Claude Code
+ * @version 1.0
+ */
+@Slf4j
+@Controller
+@RequestMapping("/profile")
+@RequiredArgsConstructor
+public class ProfileController {
+    private final UserProfileUseCase userProfileUseCase;
+
+    /**
+     * 現在ログイン中のユーザーのプロフィールを表示
+     * 
+     * @param userDetails Spring Securityから取得した認証情報
+     * @return プロフィール表示画面のModelAndView
+     */
+    @GetMapping
+    public ModelAndView viewMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        // 認証状態の確認
+        if (!isAuthenticated(userDetails)) {
+            log.warn("未認証ユーザーがプロフィールにアクセスしようとしました");
+            return new ModelAndView("redirect:/user");
+        }
+        
+        try {
+            User user = userProfileUseCase.getUserProfileByUsername(userDetails.getUsername());
+            return createProfileView(user, true);
+        } catch (Exception e) {
+            log.error("自分のプロフィール表示でエラーが発生しました: ユーザー名={}", userDetails.getUsername(), e);
+            return new ModelAndView("redirect:/user");
+        }
+    }
+
+    /**
+     * プロフィール編集画面を表示する
+     * 
+     * @param userId 表示対象のユーザーID
+     * @param userDetails 現在ログイン中のユーザー情報
+     * @return プロフィール表示画面のModelAndView
+     */
+    @GetMapping("/{userId}")
+    public ModelAndView viewProfile(@PathVariable String userId, 
+                                  @AuthenticationPrincipal UserDetails userDetails) {
+        // 認証状態の確認
+        if (!isAuthenticated(userDetails)) {
+            log.warn("未認証ユーザーがプロフィール表示を試行しました: userId={}", userId);
+            return new ModelAndView("redirect:/user");
+        }
+        
+        try {
+            // 表示対象ユーザーの情報を取得
+            User profileUser = userProfileUseCase.getUserProfile(userId);
+            User currentUser = userProfileUseCase.getUserProfileByUsername(userDetails.getUsername());
+            
+            // 自分のプロフィールかどうかを安全に判定
+            boolean isOwnProfile = determineIsOwnProfile(currentUser, userId);
+            
+            return createProfileView(profileUser, isOwnProfile);
+        } catch (IllegalArgumentException e) {
+            log.error("プロフィール表示でパラメータエラーが発生しました: userId={}, error={}", userId, e.getMessage());
+            return new ModelAndView("redirect:/board");
+        } catch (Exception e) {
+            log.error("プロフィール表示で予期しないエラーが発生しました: userId={}", userId, e);
+            return new ModelAndView("redirect:/board");
+        }
+    }
+
+    /**
+     * プロフィール編集画面を表示
+     * 
+     * @param userDetails 現在ログイン中のユーザー情報
+     * @return プロフィール編集画面のModelAndView
+     */
+    @GetMapping("/edit")
+    public ModelAndView editProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        // 認証状態の確認
+        if (!isAuthenticated(userDetails)) {
+            log.warn("未認証ユーザーがプロフィール編集にアクセスしようとしました");
+            return new ModelAndView("redirect:/user");
+        }
+        
+        try {
+            User user = userProfileUseCase.getUserProfileByUsername(userDetails.getUsername());
+            
+            // 編集フォームの初期化
+            ProfileForm profileForm = initializeProfileForm(user);
+            
+            ModelAndView modelAndView = new ModelAndView("profile/edit");
+            modelAndView.addObject("profileForm", profileForm);
+            modelAndView.addObject("user", user);
+            
+            return modelAndView;
+        } catch (Exception e) {
+            log.error("プロフィール編集画面の表示でエラーが発生しました: ユーザー名={}", userDetails.getUsername(), e);
+            return new ModelAndView("redirect:/profile");
+        }
+    }
+
+    /**
+     * プロフィール情報を更新する
+     * 
+     * @param userDetails 現在ログイン中のユーザー情報
+     * @param profileForm バリデーション済みのプロフィールフォーム
+     * @param bindingResult バリデーション結果
+     * @return 更新後の画面のModelAndView
+     */
+    @PostMapping("/edit")
+    public ModelAndView updateProfile(@AuthenticationPrincipal UserDetails userDetails,
+                                    @Validated @ModelAttribute ProfileForm profileForm,
+                                    BindingResult bindingResult) {
+        // 認証状態の確認
+        if (!isAuthenticated(userDetails)) {
+            log.warn("未認証ユーザーがプロフィール更新を試行しました");
+            return new ModelAndView("redirect:/user");
+        }
+        
+        try {
+            User user = userProfileUseCase.getUserProfileByUsername(userDetails.getUsername());
+            
+            // バリデーションエラーがある場合は編集画面に戻る
+            if (bindingResult.hasErrors()) {
+                log.debug("プロフィール更新でバリデーションエラーが発生しました: ユーザー名={}", userDetails.getUsername());
+                return createEditViewWithErrors(profileForm, user);
+            }
+    
+            // プロフィール情報の更新
+            userProfileUseCase.updateProfile(
+                user.getId().asString(),
+                profileForm.getDisplayName(),
+                profileForm.getBio()
+            );
+            // 更新後に自分のプロフィール画面へリダイレクト
+            log.info("プロフィールが正常に更新されました: ユーザー名={}", userDetails.getUsername());
+            return new ModelAndView("redirect:/profile");
+            
+        } catch (Exception e) {
+            log.error("プロフィール更新でエラーが発生しました: ユーザー名={}", userDetails.getUsername(), e);
+            
+            // エラー時は編集画面に戻る
+            try {
+                User user = userProfileUseCase.getUserProfileByUsername(userDetails.getUsername());
+                ModelAndView modelAndView = createEditViewWithErrors(profileForm, user);
+                modelAndView.addObject("errorMessage", "プロフィールの更新に失敗しました");
+                return modelAndView;
+            } catch (Exception innerE) {
+                log.error("エラー画面表示でも例外が発生しました", innerE);
+                return new ModelAndView("redirect:/profile");
+            }
+        }
+    }
+
+    /**
+     * 共通のプロフィール画面作成処理
+     * 
+     * @param user 表示対象のユーザー
+     * @param isOwnProfile 自分のプロフィールかどうか
+     * @return プロフィール表示用のModelAndView
+     */
+    private ModelAndView createProfileView(User user, boolean isOwnProfile) {
+        ModelAndView modelAndView = new ModelAndView("profile/view");
+        
+        try {
+            // ユーザーIDの安全な取得と検証
+            String userIdString = extractUserId(user);
+            
+            // プロフィール関連データの取得
+            List<Post> posts = userProfileUseCase.getUserPosts(userIdString);
+            int followingCount = userProfileUseCase.getFollowingCount(userIdString);
+            int followerCount = userProfileUseCase.getFollowerCount(userIdString);
+            
+            // ModelAndViewにデータを設定
+            populateProfileView(modelAndView, user, posts, followingCount, followerCount, isOwnProfile);
+            
+            return modelAndView;
+        } catch (Exception e) {
+            log.error("プロフィールビュー作成でエラーが発生しました: ユーザー名={}", 
+                     user != null ? user.getUsername() : "不明", e);
+            
+            // エラー時は最小限の情報で画面を表示
+            return createMinimalProfileView(modelAndView, user, isOwnProfile);
+        }
+    }
+    
+    /**
+     * 認証状態を確認
+     * 
+     * @param userDetails Spring Securityから取得したユーザー情報
+     * @return 認証済みの場合true
+     */
+    private boolean isAuthenticated(UserDetails userDetails) {
+        return userDetails != null;
+    }
+    
+    /**
+     * 自分のプロフィールかどうかを安全に判定
+     * 
+     * @param currentUser 現在ログイン中のユーザー
+     * @param targetUserId 表示対象のユーザーID
+     * @return 自分のプロフィールの場合true
+     */
+    private boolean determineIsOwnProfile(User currentUser, String targetUserId) {
+        if (currentUser == null || currentUser.getId() == null || currentUser.getId().getValue() == null) {
+            log.warn("現在のユーザー情報が不正です");
+            return false;
+        }
+        
+        return currentUser.getId().asString().equals(targetUserId);
+    }
+    
+    /**
+     * プロフィール編集フォームを初期化
+     * 
+     * @param user ユーザー情報
+     * @return 初期化されたプロフィールフォーム
+     */
+    private ProfileForm initializeProfileForm(User user) {
+        ProfileForm profileForm = new ProfileForm();
+        profileForm.setDisplayName(user.getDisplayName().getValue());
+        profileForm.setBio(user.getBio());
+        return profileForm;
+    }
+    
+    /**
+     * エラーがある編集画面のModelAndViewを作成
+     * 
+     * @param profileForm エラーを含むフォーム
+     * @param user ユーザー情報
+     * @return 編集画面のModelAndView
+     */
+    private ModelAndView createEditViewWithErrors(ProfileForm profileForm, User user) {
+        ModelAndView modelAndView = new ModelAndView("profile/edit");
+        modelAndView.addObject("profileForm", profileForm);
+        modelAndView.addObject("user", user);
+        return modelAndView;
+    }
+    
+    /**
+     * ユーザーIDを安全に取得
+     * 
+     * @param user ユーザー情報
+     * @return ユーザーID文字列
+     * @throws IllegalArgumentException ユーザーIDが無効な場合
+     */
+    private String extractUserId(User user) {
+        if (user == null || user.getId() == null || user.getId().getValue() == null) {
+            String username = user != null ? user.getUsername() : "不明";
+            log.error("ユーザーIDが無効です: ユーザー名={}", username);
+            throw new IllegalArgumentException("無効なユーザーIDです");
+        }
+        
+        return user.getId().asString();
+    }
+    
+    /**
+     * プロフィール表示用のModelAndViewにデータを設定
+     * 
+     * @param modelAndView 設定対象のModelAndView
+     * @param user ユーザー情報
+     * @param posts 投稿一覧
+     * @param followingCount フォロー中のユーザー数
+     * @param followerCount フォロワー数
+     * @param isOwnProfile 自分のプロフィールかどうか
+     */
+    private void populateProfileView(ModelAndView modelAndView, User user, List<Post> posts, 
+                                   int followingCount, int followerCount, boolean isOwnProfile) {
+        modelAndView.addObject("user", user);
+        modelAndView.addObject("posts", posts);
+        modelAndView.addObject("followingCount", followingCount);
+        modelAndView.addObject("followerCount", followerCount);
+        modelAndView.addObject("isOwnProfile", isOwnProfile);
+    }
+    
+    /**
+     * エラー時の最小限のプロフィール表示用ModelAndViewを作成
+     * 
+     * @param modelAndView 設定対象のModelAndView
+     * @param user ユーザー情報
+     * @param isOwnProfile 自分のプロフィールかどうか
+     * @return 最小限のプロフィール表示用ModelAndView
+     */
+    private ModelAndView createMinimalProfileView(ModelAndView modelAndView, User user, boolean isOwnProfile) {
+        modelAndView.addObject("user", user);
+        modelAndView.addObject("posts", List.of());
+        modelAndView.addObject("followingCount", 0);
+        modelAndView.addObject("followerCount", 0);
+        modelAndView.addObject("isOwnProfile", isOwnProfile);
+        modelAndView.addObject("errorMessage", "プロフィール情報の一部を読み込めませんでした");
+        
+        return modelAndView;
+    }
+}
